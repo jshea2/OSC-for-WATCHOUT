@@ -17,7 +17,7 @@ Control Actions in WATCHOUT via OSC
         - `/watchout/go/%1`
           - this syntax triggers every go cue from Eos and replaces the `%1` with the fired cue number
     - Set **UDP TX IP Address** to the IP of the WATHCOUT Production computer or OSC for WATCHOUT
-        - *Note: In my case for using the same computer for Eos -> WATCHOUT 127.0.0.1 did not work, so i used the IP that it connects to another network.*
+        - *Note: In my case for using the same computer for Eos -> WATCHOUT `127.0.0.1` or `localhost` did not work in Eos, so i used the IP that it connects to another network.*
 
 
 ![Screenshot 2022-02-11 193513](https://user-images.githubusercontent.com/70780576/153695773-377dbc16-1ba9-440b-a713-7f341e2e1568.png)
@@ -31,6 +31,7 @@ Control Actions in WATCHOUT via OSC
       - Default is `3032`
  - Watchout (Out)
    - IP should match to the WATCHOUT Production computer's IP
+        - Default is same computer `127.0.0.1`
    - Port should be `3040`
       - This is the port WATCHOUT uses to listen for control messages
 
