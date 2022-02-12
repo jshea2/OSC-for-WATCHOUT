@@ -5,11 +5,42 @@ Control Actions in WATCHOUT via OSC
 
 <img src="https://user-images.githubusercontent.com/70780576/153570422-1d8da18f-948e-4256-97fa-0d840572951e.png" alt="demo" width="400"/>
 
+# Setup
+
+### Eos
+
+- System > Show Control > OSC
+    - Enable **OSC TX**
+    - Set **OSC UDP TX Port** To match *OSC for WATCHOUT*
+        - Default is `3032`
+    - Set **OSC Cue Send String** to 
+        - `/watchout/go/%1`
+          - this syntax triggers every go cue from Eos and replaces the `%1` with the fired cue number
+    - Set **UDP TX IP Address** to the IP of the WATHCOUT Production computer or OSC for WATCHOUT
+        - *Note: In my case for using the same computer for Eos -> WATCHOUT 127.0.0.1 did not work, so i used the IP that it connects to another network.
+
+
+### OSC for WATCHOUT
+
+- OSC IN
+   - IP should be `127.0.0.1`
+   - Port should be what is set in Eos
+      - Default is `3032`
+ - Watchout (Out)
+   - IP should match to the WATCHOUT Production computer's IP
+   - Port should be `3040`
+      - This is the port WATCHOUT uses to listen for control messages
+
+### WATCHOUT
+
+- Preferences > Control > Production Computer Control
+    - Enable "TCP/IP"
+
 # OSC Commands
 
-- `/watchout/go/${cue}` Executes: "gotoControlCue ${cue}" followed by "run"
+- `/watchout/go/[cueNumber]` Executes: "gotoControlCue [cue]" followed by "run"
 
-- `/watchout/goto/${cue}` Executes: "gotoControlCue ${cue}" followed by "run"
+- `/watchout/goto/[cueNumber]` Executes: "gotoControlCue [cue]" followed by "run"
 
 - `/watchout/run` Executes: "run"
 
