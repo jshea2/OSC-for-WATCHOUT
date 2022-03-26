@@ -54,5 +54,20 @@ Control Actions in WATCHOUT via OSC
 
 - `/watchout/halt` Executes: "halt"
 
+- `/watchout/online` Executes Online for Stage
+
+- `/watchout/offline` Executes Offline for Stage
+
+- `/watchout/reset` Resets playhead to beginning of timeline
+
+- `/watchout/load [project_name]` Opens WATCHOUT project  [beta]
+
+- `/watchout/kill [aux_timeline]` Kills Aux Timeline   [beta]
+
+- `/watchout/standBy` Execute Standby   [beta]
+
+- `/watchout/ping` Ping WACTHOUT. Response in Console
+
+
 # Credits:
 All credit goes to [danielbchapman](https://github.com/danielbchapman/osc-watchout) for writing the amazing server side code. I just packaged it in a React-Electron App
