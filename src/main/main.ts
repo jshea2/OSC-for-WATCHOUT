@@ -255,7 +255,23 @@ const createWindow = async () => {
         let msgArray = msg[0].split("/")
         console.log(msgArray)
         if(msgArray[1] == "watchout"){
-          let cueNumber = msgArray[3]
+          let cueNumber
+          if (msgArray[3]){
+          if (msgArray[3].includes('_')) {
+            cueNumber = msgArray[3].split("_").join(" ").toString()
+          } else {
+            cueNumber = msgArray[3]
+          }
+        }
+        let cueNumber2
+          if (msgArray[4]){
+          if (msgArray[4].includes('_')) {
+            cueNumber2 = msgArray[4].split("_").join(" ").toString()
+          } else {
+            cueNumber2 = msgArray[4]
+          }
+        }
+          console.log(`Cue Number = ${cueNumber}`)
           let command = msgArray[2]
           console.log(`${watchoutIpOut} | ${watchoutPortOut}`)
           socket.setTimeout(1000)
@@ -293,7 +309,45 @@ const createWindow = async () => {
                 console.log("HELOOOOO")
                 logEverywhere(`[OSC IN] ${msg[0]}`)
                 logEverywhere(`[WATCHOUT] GO TO CUE ${cueNumber} AND RUN`)
-                  socket.write(`gotoControlCue ${cueNumber}\nrun\n`)
+                  socket.write(`gotoControlCue "${cueNumber}"\nrun\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "goAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] GO TO CUE "${cueNumber}" in Aux Timeline "${cueNumber}" AND RUN`)
+                  socket.write(`gotoControlCue "${cueNumber2}" false "${cueNumber}"\nrun "${cueNumber}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "runAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] RUN Aux Timeline "${cueNumber}"`)
+                  socket.write(`run "${cueNumber}"\n`)
                   console.log(``)
                   setTimeout(() => {
                     socket.destroy()
@@ -332,6 +386,44 @@ const createWindow = async () => {
                 logEverywhere(`[OSC IN] ${msg[0]}`)
                 logEverywhere(`[WATCHOUT] GO TO CUE ${cueNumber} AND HALT`)
                   socket.write(`gotoControlCue ${cueNumber}\nhalt\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "gotoAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] GO TO CUE ${cueNumber} in Aux Timeline "${cueNumber}"AND HALT`)
+                  socket.write(`gotoControlCue "${cueNumber2}" false "${cueNumber}"\nhalt "${cueNumber}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "haltAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] HALT Aux Timeline "${cueNumber}"`)
+                  socket.write(`halt "${cueNumber}"\n`)
                   console.log(``)
                   setTimeout(() => {
                     socket.destroy()
@@ -416,7 +508,7 @@ const createWindow = async () => {
               )
             }
             break
-            case "kill": {
+            case "killAux": {
               socket.connect({
                 host: watchoutIpOut,
                 port: watchoutPortOut,
@@ -426,7 +518,7 @@ const createWindow = async () => {
                 logEverywhere(`[OSC IN] ${msg[0]}`)
                 console.log("HELOOOOO")
                 logEverywhere(`[WATCHOUT] KILL`)
-                  socket.write(`kill ${msg[1]}\n`)
+                  socket.write(`kill "${cueNumber}"}\n`)
                   console.log(``)
                   setTimeout(() => {
                     socket.destroy()
@@ -464,7 +556,26 @@ const createWindow = async () => {
                 logEverywhere(`[OSC IN] ${msg[0]}`)
                 console.log("HELOOOOO")
                 logEverywhere(`[WATCHOUT] LOAD`)
-                  socket.write(`load ${msg[1]}\n`)
+                  socket.write(`load "${msg[1].split("_").join(" ")}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "gotoTime": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] Go To Time`)
+                  socket.write(`gotoTime ${msg[1].toString()})\n`)
                   console.log(``)
                   setTimeout(() => {
                     socket.destroy()
