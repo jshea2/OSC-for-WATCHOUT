@@ -46,13 +46,23 @@ Control Actions in WATCHOUT via OSC
 
 # OSC Commands
 
-- `/watchout/go/[cueNumber]` Executes: "gotoControlCue [cue]" followed by "run"
+- `/watchout/go/[cueNumber]` Run `cueName` Control Cue in Main Timeline
 
-- `/watchout/goto/[cueNumber]` Executes: "gotoControlCue [cue]" followed by "run"
+- `/watchout/goAux/[auxTimlineName]/[cueName]` Run `cueName` Control Cue in `auxTimelineName` Aux Timeline
 
-- `/watchout/run` Executes: "run"
+- `/watchout/goto/[cueNumber]`  Playhead at `cueName` Control Cue in Main Timeline and Halt
 
-- `/watchout/halt` Executes: "halt"
+- `/watchout/gotoAux/[auxTimelineName]/[cueName]` Playhead at `cueName` Control Cue in `auxTimelineName` Aux Timeline and Halt
+
+- `/watchout/run` Run Main Timeline
+
+- `/watchout/runAux/[auxTimelineName]` Run `auxTimelineName` Aux Timeline
+
+- `/watchout/halt` Halt Main Timeline
+
+- `/watchout/haltAux/[auxTimelineName]` Halt `auxTimelineName` Aux Timeline
+
+- `/watchout/killAux/[auxTimelineName]` Kill `auxTimelineName` Aux Timeline
 
 - `/watchout/online` Executes Online for Stage
 
@@ -60,9 +70,9 @@ Control Actions in WATCHOUT via OSC
 
 - `/watchout/reset` Resets playhead to beginning of timeline
 
-- `/watchout/load [project_name]` Opens WATCHOUT project  [beta]
+- `/watchout/gotoTime [ms]` Jumps playhead to specified time in milliseconds(ms)
 
-- `/watchout/kill [aux_timeline]` Kills Aux Timeline   [beta]
+- `/watchout/load [project_name]` Opens WATCHOUT project  [beta]
 
 - `/watchout/standBy` Execute Standby   [beta]
 
