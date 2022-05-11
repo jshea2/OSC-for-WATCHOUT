@@ -46,11 +46,11 @@ Control Actions in WATCHOUT via OSC
 
 # OSC Commands
 
-- `/watchout/go/[cueNumber]` Run `cueName` Control Cue in Main Timeline
+- `/watchout/go/[cueName]` Run `cueName` Control Cue in Main Timeline
 
 - `/watchout/goAux/[auxTimlineName]/[cueName]` Run `cueName` Control Cue in `auxTimelineName` Aux Timeline
 
-- `/watchout/goto/[cueNumber]`  Playhead at `cueName` Control Cue in Main Timeline and Halt
+- `/watchout/goto/[cueName]`  Playhead at `cueName` Control Cue in Main Timeline and Halt
 
 - `/watchout/gotoAux/[auxTimelineName]/[cueName]` Playhead at `cueName` Control Cue in `auxTimelineName` Aux Timeline and Halt
 
