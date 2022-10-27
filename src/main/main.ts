@@ -16,12 +16,8 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 const fs = require('fs')
 const { Client, Server } = require('node-osc');
-const express = require('express')
-const app2 = express()
-const server = require('http').createServer(app2)
-const WebSocket = require('ws')
-
-
+const net = require('net')
+const socket = new net.Socket()
 
 
 
@@ -67,7 +63,7 @@ if (process.env.NODE_ENV === 'production') {
 // };
 
 const windowWidth = 160;
-const windowHeight = 537;
+const windowHeight = 387;
 
 const createWindow = async () => {
   // if (isDevelopment) {
@@ -95,7 +91,7 @@ const createWindow = async () => {
     backgroundColor: '#081421', // background color
     icon: getAssetPath('icon.png'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.ts')
     },
   });
 
@@ -131,12 +127,8 @@ const createWindow = async () => {
 
   let oscIpIn
   let oscPortIn
-  let oscIpOut
-  let oscPortOut
   let watchoutIpOut
   let watchoutPortOut
-  let oscInEnabled
-  let oscOutEnabled
 
 
   // Log to Browser Console
@@ -159,12 +151,8 @@ const createWindow = async () => {
       const jsonData = JSON.parse(data)
       oscIpIn = jsonData.iposc
       oscPortIn = jsonData.portosc
-      oscIpOut = jsonData.iposcout
-      oscPortOut = jsonData.portoscout
       watchoutIpOut = jsonData.ipwatchout
       watchoutPortOut = jsonData.portwatchout
-      oscInEnabled = jsonData.oscinenabled
-      oscOutEnabled = jsonData.oscoutenabled
       console.log(`i got the config file:`)
       console.log(jsonData)
       ipcMain.handle('configDefaults', async (_,message) => {
@@ -187,86 +175,62 @@ const createWindow = async () => {
     console.log("saved file")
   }
 
-
   //Submit and Config Handle
   ipcMain.handle('config', async (_, message) => {
-    if(message.portwatchout == 8000){
-      mainWindow.setSize((windowWidth*2+100),windowHeight)
-      mainWindow.webContents.openDevTools();
-      logEverywhere("Websocket Port ERROR: This app is already using port 8000")
-      logEverywhere("Please choose a different Port number")
-      mainWindow.webContents.send("woconnected", false)
-      return
-    }
     console.log(message)
     saveData(message)
     oscIpIn = message.iposc
     oscPortIn = message.portosc
-    oscIpOut = message.iposcout
-    oscPortOut = message.portoscout
     watchoutIpOut = message.ipwatchout
     watchoutPortOut = message.portwatchout
-    oscInEnabled = message.oscinenabled
-    oscOutEnabled = message.oscoutenabled
     mainWindow.setSize((windowWidth*2+100),windowHeight)
     mainWindow.webContents.openDevTools();
     //logEverywhere("")
 
-
-    // WEBSOCKET and EXPRESS
-    const wss = new WebSocket.Server({server:server})
-    const ws = new WebSocket(`ws://localhost:${watchoutPortOut}`, {
-      perMessageDeflate: false
-    });
-
-
-    wss.on('connection', function connection(ws) {
-      console.log("connected to server")
-      mainWindow.webContents.send("woconnected", true)
-
-      if (oscInEnabled){
-        oscServer.on('message', function (msg) {
-
-          console.log(`OSC Message: ${msg}`)
-          logEverywhere(`OSC Message: ${msg}`)
-          let obj = {
-            v:[msg[1]],
-            a: msg[0]
-          }
-          ws.send(JSON.stringify(obj));
-
-        })
+    socket.connect({
+      host: watchoutIpOut,
+      port: watchoutPortOut,
+      readable: true,
+      writeable: true,
+    }, ()=>{
+      console.log("HELOOOOO")
+      logEverywhere(`[WATCHOUT] PING`)
+        socket.write(`ping\n`)
+        console.log(``)
+        setTimeout(() => {
+          socket.destroy()
+        }, 100);
       }
+    )
 
-      if (oscOutEnabled){
-        ws.on('message', function message(data) {
-          console.log("This is the Websocket Data:")
-          console.log(data.toString());
-          let wsoscmessage = JSON.parse(data.toString())
-          oscClient.send(wsoscmessage.a, wsoscmessage.v)
-        });
+    socket.on('data', (data) => {
+      console.log(data)
+      console.log(data)
+      let b = Buffer.from(data, 'utf8')
+      console.log(JSON.stringify(b))
+      let isReady = b.toString('utf8')
+      if (isReady.includes("Ready")){
+        let arr = isReady.split(' ')
+        console.log(arr)
+        logEverywhere(`[PING] [WATCHOUT IS CONNECTED!]`)
+        logEverywhere(`[Version: ${arr[1]}]`)
+        mainWindow.webContents.send("woconnected", true)
       }
-
-
-      //ws.close()
-
+      if (isReady.includes("true")){
+        logEverywhere("[License is Active]")
+      } else if (isReady.includes("false")){
+        logEverywhere("[No License Found - DEMO Mode]")
+      }
+      //logEverywhere(isReady)
     })
 
-    app2.get('/', (req,res) => res.send("Hello World!"))
-
-    server.listen(watchoutPortOut, () => {
-      console.log(`Listening on port :${watchoutPortOut}`)
-      logEverywhere(`Websocket Connected on Port :${watchoutPortOut}`)
+    socket.on('error', (data) => {
+      console.log(data);
+      mainWindow.webContents.send("woconnected", false)
+      logEverywhere(`[WATCHOUT IS DISCONNECTED]`)
     })
 
-
-
-
-
-
-
-    if (oscInEnabled){
-          //Connect OSC
+    //Connect OSC
     var oscServer = new Server(oscPortIn, oscIpIn, () => {
       console.log('OSC Server is listening');
       console.log(`OSC IP: ${oscIpIn}\n OSC Port: ${oscPortIn}`)
@@ -281,17 +245,374 @@ const createWindow = async () => {
       });
       //oscServer.close();
     });
-    }
 
-    if (oscOutEnabled){
-      var oscClient = new Client(oscIpOut, oscPortOut, () => {
-        console.log('OSC Client is listening');
-        console.log(`OSC Out IP: ${oscIpOut}\n OSC Port: ${oscPortOut}`)
+    oscServer.on('message', function (msg) {
+
+
+
+
+        console.log(`Message: ${msg}`);
+        let msgArray = msg[0].split("/")
+        console.log(msgArray)
+        if(msgArray[1] == "watchout"){
+          let cueNumber
+          if (msgArray[3]){
+          if (msgArray[3].includes('_')) {
+            cueNumber = msgArray[3].split("_").join(" ").toString()
+          } else {
+            cueNumber = msgArray[3]
+          }
+        }
+        let cueNumber2
+          if (msgArray[4]){
+          if (msgArray[4].includes('_')) {
+            cueNumber2 = msgArray[4].split("_").join(" ").toString()
+          } else {
+            cueNumber2 = msgArray[4]
+          }
+        }
+          console.log(`Cue Number = ${cueNumber}`)
+          let command = msgArray[2]
+          console.log(`${watchoutIpOut} | ${watchoutPortOut}`)
+          socket.setTimeout(1000)
+          socket.on('connect', () => {
+            console.log('connect')
+          })
+          socket.on('data', (data) => {
+            console.log(data)
+            console.log(data)
+            let b = Buffer.from(data, 'utf8')
+            console.log(JSON.stringify(b))
+            let isReady = b.toString('utf8')
+            if (isReady.includes("Ready")){
+              logEverywhere("[PING] [WATCHOUT IS CONNECTED!]")
+              mainWindow.webContents.send("woconnected", true)
+            }
+            logEverywhere(isReady)
+          })
+          socket.on('close', ()=>{
+            console.log('closed')
+          })
+          socket.on('error', (err)=>{
+            console.log(err)
+            logEverywhere(err)
+          })
+
+          switch (command) {
+            case "go": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] GO TO CUE ${cueNumber} AND RUN`)
+                  socket.write(`gotoControlCue "${cueNumber}"\nrun\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "goAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] GO TO CUE "${cueNumber}" in Aux Timeline "${cueNumber}" AND RUN`)
+                  socket.write(`gotoControlCue "${cueNumber2}" false "${cueNumber}"\nrun "${cueNumber}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "runAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] RUN Aux Timeline "${cueNumber}"`)
+                  socket.write(`run "${cueNumber}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "run": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] RUN`)
+                  socket.write(`run\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "goto": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] GO TO CUE ${cueNumber} AND HALT`)
+                  socket.write(`gotoControlCue ${cueNumber}\nhalt\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "gotoAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                console.log("HELOOOOO")
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                logEverywhere(`[WATCHOUT] GO TO CUE ${cueNumber} in Aux Timeline "${cueNumber}"AND HALT`)
+                  socket.write(`gotoControlCue "${cueNumber2}" false "${cueNumber}"\nhalt "${cueNumber}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "haltAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] HALT Aux Timeline "${cueNumber}"`)
+                  socket.write(`halt "${cueNumber}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "halt": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] HALT`)
+                  socket.write(`halt\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "online": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] ONLINE`)
+                  socket.write(`online true\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "offline": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] OFFLINE`)
+                  socket.write(`online false\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "reset": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] RESET`)
+                  socket.write(`reset\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "killAux": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] KILL`)
+                  socket.write(`kill "${cueNumber}"}\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "standBy": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] STANDBY`)
+                  socket.write(`standBy true\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "load": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] LOAD`)
+                  socket.write(`load "${msg[1].split("_").join(" ")}"\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "gotoTime": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] Go To Time`)
+                  socket.write(`gotoTime ${msg[1].toString()})\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 1);
+                }
+              )
+            }
+            break
+            case "ping": {
+              socket.connect({
+                host: watchoutIpOut,
+                port: watchoutPortOut,
+                readable: true,
+                writeable: true,
+              }, ()=>{
+                logEverywhere(`[OSC IN] ${msg[0]}`)
+                console.log("HELOOOOO")
+                logEverywhere(`[WATCHOUT] PING`)
+                  socket.write(`ping\n`)
+                  console.log(``)
+                  setTimeout(() => {
+                    socket.destroy()
+                  }, 100);
+                }
+              )
+            }
+
+          }
+        } else if (msg[0].includes("/eos/out/event/")) {
+          logEverywhere(`[OSC IN] ${msg[0]}`)
+          //logEverywhere(`Invalid OSC Command... Try the following commands "/watchout/go/1", "/run", "/halt, "watchout/goto/2"`)
+        } else if (msg[0].includes("/eos/out/")){
+          return
+        } else {
+          logEverywhere(`[OSC IN] ${msg[0]}`)
+        }
       })
-    }
-
-
-
     //
 
     return

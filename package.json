@@ -1,5 +1,5 @@
 {
-  "name": "WebsocketOSC",
+  "name": "electron-react-boilerplate",
   "description": "A foundation for scalable desktop apps",
   "version": "1.2.0",
   "scripts": {
@@ -13,6 +13,7 @@
     "start": "ts-node ./.erb/scripts/check-port-in-use.js && npm run start:renderer",
     "start:main": "cross-env NODE_ENV=development electronmon -r ts-node/register/transpile-only ./src/main/main.ts",
     "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
+    "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
     "test": "jest",
     "prepare": "husky install"
   },
@@ -31,7 +32,7 @@
     ]
   },
   "build": {
-    "productName": "WebsocketOSC",
+    "productName": "OSC for WATCHOUT",
     "appId": "org.erb.ElectronReact",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
@@ -94,16 +95,18 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "jshea2",
-      "repo": "WebsocketOSC"
+      "owner": "electron-react-boilerplate",
+      "repo": "OSC-for-WATCHOUT"
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jshea2/WebsocketOSC.git"
+    "url": "git+https://github.com/jshea2/OSC-for-WATCHOUT.git"
   },
   "author": {
-    "name": "Joe Shea"
+    "name": "Joe Shea",
+    "email": "electronreactboilerplate@gmail.com",
+    "url": "https://electron-react-boilerplate.js.org"
   },
   "contributors": [
     {
@@ -238,13 +241,11 @@
     "electron-log": "^4.4.4",
     "electron-updater": "^4.6.5",
     "electronmon": "^2.0.2",
-    "express": "^4.18.2",
     "history": "^5.2.0",
     "node-osc": "^6.1.13",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^6.2.1",
-    "ws": "^8.10.0"
+    "react-router-dom": "^6.2.1"
   },
   "devEngines": {
     "node": ">=14.x",
@@ -268,9 +269,7 @@
     ],
     "singleQuote": true
   },
-  "electronmon": {
-    "patterns": [
-      "!data/**"
-    ]
+    "electronmon": {
+      "patterns": ["!data/**"]
   }
 }

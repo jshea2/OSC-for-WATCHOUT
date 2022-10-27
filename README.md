@@ -7,7 +7,7 @@ Control Actions in WATCHOUT via OSC
 
 # Setup
 
-### Eos yo
+### Eos
 
 - System > Show Control > OSC
     - Enable **OSC TX**
