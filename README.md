@@ -81,3 +81,10 @@ Control Actions in WATCHOUT via OSC
 
 # Credits:
 All credit goes to [danielbchapman](https://github.com/danielbchapman/osc-watchout) for writing the amazing server side code. I just packaged it in a React-Electron App
+
+#
+## Join the Discord Community
+
+<a href="https://discord.gg/FJ79AKPgSk">
+        <img src="https://img.shields.io/discord/308323056592486420?logo=discord"
+            alt="chat on Discord"></a>
