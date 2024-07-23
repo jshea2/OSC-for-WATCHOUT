@@ -106,7 +106,7 @@ const createWindow = async () => {
     };
     const jsonData = JSON.stringify(config, null, 2);
     fs.writeFile(path.join(dataPath, 'config.json'), jsonData, finished);
-    console.log('saved file');
+    console.log('Saved file');
   };
 
   // Submit and Config Handle
