@@ -15,8 +15,15 @@ import deleteSourceMaps from '../scripts/delete-source-maps';
 checkNodeEnv('production');
 deleteSourceMaps();
 
+const devtoolsConfig =
+  process.env.DEBUG_PROD === 'true'
+    ? {
+        devtool: 'source-map',
+      }
+    : {};
+
 const configuration: webpack.Configuration = {
-  devtool: 'source-map',
+  ...devtoolsConfig,
 
   mode: 'production',
 
@@ -24,15 +31,12 @@ const configuration: webpack.Configuration = {
 
   entry: {
     main: path.join(webpackPaths.srcMainPath, 'main.ts'),
-    preload: path.join(webpackPaths.srcMainPath, 'preload.ts'),
+    preload: path.join(webpackPaths.srcMainPath, 'preload.js'),
   },
 
   output: {
     path: webpackPaths.distMainPath,
     filename: '[name].js',
-    library: {
-      type: 'umd',
-    },
   },
 
   optimization: {
@@ -61,10 +65,6 @@ const configuration: webpack.Configuration = {
       NODE_ENV: 'production',
       DEBUG_PROD: false,
       START_MINIMIZED: false,
-    }),
-
-    new webpack.DefinePlugin({
-      'process.type': '"main"',
     }),
   ],
 
